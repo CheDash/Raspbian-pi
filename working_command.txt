@@ -1,0 +1,166 @@
+sudo qemu-system-arm \
+  -M versatilepb \
+  -cpu arm1176 \
+  -m 256 \
+  -hda 2019-09-26-raspbian-buster-lite.img \
+  -net user,hostfwd=tcp::5022-:22 \
+  -dtb versatile-pb-buster.dtb \
+  -kernel kernel-qemu-4.19.50-buster \
+  -append 'root=/dev/sda2 panic=1' \
+  -no-reboot
+
+
+sudo qemu-system-arm \
+  -M versatilepb \
+  -cpu arm1176 \
+  -m 256 \
+  -hda 2019-09-26-raspbian-buster-full.img \
+  -net user,hostfwd=tcp::5022-:22 \
+  -dtb versatile-pb-buster.dtb \
+  -kernel kernel-qemu-4.19.50-buster \
+  -append 'root=/dev/sda2 panic=1' \
+  -no-reboot
+
+
+sudo qemu-system-arm -kernel kernel-qemu-4.19.50-buster -cpu arm1176 -m 256 -M versatilepb -serial stdio -append "root=/dev/sda2 rootfstype=ext4 rw" -hda 2019-09-26-raspbian-buster-full.img -redir tcp:5022::22 -no-reboot -dtb versatile-pb-buster.dtb
+
+
+
+sudo ./qemu/sysroot/bin/qemu-system-arm \
+-kernel ./kernel-qemu-4.4.36 \
+-initrd rootfs.cpio
+-append “root=/dev/ram rdinit=/sbin/init” \
+-cpu arm1176 -m 256 \
+-M versatilepb \
+-no-reboot \
+-serial stdio \
+-net nic \
+-net tap,ifname=vnet0,script=no,downscript=no
+
+
+sudo qemu-system-arm \
+  -M versatilepb \
+  -cpu arm1176 \
+  -m 256 \
+  -hda 2019-09-26-raspbian-buster-full.img \
+  -dtb versatile-pb-buster.dtb \
+  -kernel kernel-qemu-4.19.50-buster \
+  -append 'root=/dev/sda2 panic=1' \
+  -no-reboot \
+  -serial stdio \
+  -net nic \
+  -net tap,ifname=vnet0,script=no,downscript=no
+  
+• In Guest side:
+	#Create the password for root
+	passwd root
+	#Assign IP
+	sudo ifconfig eth0 10.0.0.15
+• In host side:
+	#Check for vnet0 interface
+	ifconfig -a
+	sudo ifconfig vnet0 10.0.0.16
+•# Check for connectivity between qemu-rpi and host
+ping 10.0.0.15 
+•# Check for ssh
+ssh pi@10.0.2.15
+
+To chanmge the size 
+cp 2019-09-26-raspbian-buster-full.img rasbian.img
+qemu-img resize raspbian.img +10G
+Then log-in to qemu 
+Open a terminal 
+% sudo cfdisk 
+inside cfdisk
+--> delete /dev/sda2 < it can be /dev/sdb2 or soemthing check yourself)
+--> new partition --> primary with full space then come out of cfdisk 
+%sudo resize2fs /dev/sda2 
+$ sudo fsck -f /dev/sdb2
+$ sudo halt
+
+Next boot the partitions are extended 
+
+For Networking :
+
+sudo qemu-system-arm -kernel ~/qemu_vms/<kernel-qemu> -cpu arm1176 -m 256 -M versatilepb -serial stdio -append "root=/dev/sda2 rootfstype=ext4 rw" -hda ~/qemu_vms/rasbian.img -net nic -net tap,ifname=tap0,script=no,downscript=no -no-reboot
+
+
+Host side :
+%sudo apt-get install uml-utilities
+%sudo tunctl -t tap0 -u azeria
+%sudo ifconfig tap0 172.16.0.1/24
+%ifconfig tap0
+tap0: flags=4099<UP,BROADCAST,MULTICAST> mtu 1500
+inet 172.16.0.1 netmask 255.255.255.0 broadcast 172.16.0.255
+ether 22:a8:a9:d3:95:f1 txqueuelen 1000 (Ethernet)
+RX packets 0 bytes 0 (0.0 B)
+RX errors 0 dropped 0 overruns 0 frame 0
+TX packets 0 bytes 0 (0.0 B)
+TX errors 0 dropped 0 overruns 0 carrier 0 collisions 0
+Once the guest starts and configured , please check with below for NW 
+%ifconfig tap0 | grep 'inet'
+
+Guest side:
+
+sudo qemu-system-arm \
+  -M versatilepb \
+  -cpu arm1176 \
+  -m 256 \
+  -hda raspbian.img \
+  -dtb versatile-pb-buster.dtb \
+  -kernel kernel-qemu-4.19.50-buster \
+  -append 'root=/dev/sda2 panic=1' \
+  -no-reboot \
+  -serial stdio \
+  -net nic \
+  -net user,hostfwd=tcp::2222-:22,hostfwd=tcp::22280-:80
+ # -net tcp:2222::22 \ #nic \
+ # -net tap,ifname=tap0,script=no,downscript=no 
+  
+ form the terminal 
+ % sudo ifconfig eth0 172.16.0.2/24
+ % sudo ifconfig -a 
+ 
+ 
+ Can we increase the ram size:
+ % qemu-img create -f raw /tmp/image 1G
+ 
+sudo qemu-system-arm \
+  -M versatilepb \
+  -cpu arm1176 \
+  -m 256 \
+  -hda raspbian.img \
+  -hdb /tmp/image \
+  -dtb versatile-pb-buster.dtb \
+  -kernel kernel-qemu-4.19.50-buster \
+  -append 'root=/dev/sda2 panic=1' \
+  -no-reboot \
+  -serial stdio \
+  -net nic \
+  -net user,hostfwd=tcp::2222-:22,hostfwd=tcp::22280-:80 \
+  -device intel-hda \
+  -device hda-duplex \
+  -soundhw es1370
+  
+ Hi, djhuk!
+
+I had the same problem with installing LaTeX (texlive packages). It failed during update because of lack of RAM and I couldn't set up more via qemu.
+
+My solution was to create a raw image (qemu-img create -f raw /tmp/image 1G) and use it as swap partition.
+
+You should at to your command the parameter
+qemu -kernel ... -hdb /tmp/image
+(or what ever you named it and where ever you placed it).
+
+Whit mkswap you can generate a swap partition an with swapon you activate it.
+
+sudo mkswap /dev/sdb
+sudo swapon /dev/sdb
+free -m
+
+(You don't need to crate a partition table on sdb, you can use the whole disk as swap instead.)
+
+If you have lots of RAM on the host server you can place your image in tmpfs, which will make it just as fast as emulated RAM.
+
+Cheers,
+Maribu

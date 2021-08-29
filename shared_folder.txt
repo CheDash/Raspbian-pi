@@ -1,0 +1,11 @@
+sudo usermod -aG vboxsf $USER
+
+https://github.com/dhruvvyas90/qemu-rpi-kernel
+
+https://azeria-labs.com/emulate-raspberry-pi-with-qemu/
+
+http://debian.rutgers.edu/raspbian_images/raspberrypi/images/raspbian/2019-09-26-raspbian-buster/
+
+https://linuxconfig.org/how-to-run-the-raspberry-pi-os-in-a-virtual-machine-with-qemu-and-kvm
+
+https://jumpnowtek.com/rpi/Raspberry-Pi-Systems-with-Yocto.html

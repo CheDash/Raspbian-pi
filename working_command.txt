@@ -164,3 +164,25 @@ If you have lots of RAM on the host server you can place your image in tmpfs, wh
 
 Cheers,
 Maribu
+
+
+
+sudo qemu-system-arm \
+  -M versatilepb \
+  -cpu arm1176 \
+  -m 256 \
+  -hda raspbian.img \
+  -hdb /tmp/image \
+  -dtb versatile-pb-buster.dtb \
+  -kernel kernel-qemu-4.19.50-buster \
+  -append 'root=/dev/sda2 panic=1' \
+  -no-reboot \
+  -serial stdio \
+  -net nic \
+  -net user,hostfwd=tcp::10022-:22
+  
+  In the guest 
+  
+  % ssh aj@192.168.29.103 < and it asked for the password > done !!!
+  % scp aj@192.168.29.103:/home/aj/hi.txt . < copy done to guest> done !!! 
+  

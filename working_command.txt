@@ -179,7 +179,9 @@ sudo qemu-system-arm \
   -no-reboot \
   -serial stdio \
   -net nic \
-  -net user,hostfwd=tcp::10022-:22
+  -net user,hostfwd=tcp::10022-:22 \
+  -device intel-hda \
+  -device hda-duplex 
   
   In the guest 
   
